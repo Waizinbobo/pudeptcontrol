@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dashboard.dart';
 
 class DepartmentLoginPage extends StatefulWidget {
   const DepartmentLoginPage({super.key});
@@ -14,7 +15,7 @@ class _DepartmentLoginPageState extends State<DepartmentLoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F8FF),
+      backgroundColor: const Color(0xfff6f6f8),
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -91,7 +92,7 @@ class _DepartmentLoginPageState extends State<DepartmentLoginPage> {
 
                 /// Login / Signup Toggle
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                   height: 48,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade200,
@@ -110,7 +111,7 @@ class _DepartmentLoginPageState extends State<DepartmentLoginPage> {
                 /// Email Field
                 _inputLabel("Email or Username"),
                 _textField(
-                  hint: "admin@uni.edu",
+                  hint: "teacher@uni.edu",
                   icon: Icons.mail_outline,
                 ),
 
@@ -149,9 +150,16 @@ class _DepartmentLoginPageState extends State<DepartmentLoginPage> {
                 ElevatedButton(
                   onPressed: () {
                     if (isLogin) {
-                      // Login logic
+                      // Navigate to dashboard
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DashboardUI(),
+                        ),
+                      );
                     } else {
                       // Sign up logic
+                      print("Sign Up pressed");
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -178,16 +186,16 @@ class _DepartmentLoginPageState extends State<DepartmentLoginPage> {
                 Center(
                   child: RichText(
                     text: const TextSpan(
-                      style: TextStyle(color: Colors.grey, fontSize: 20),
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
                       children: [
+                        TextSpan(text: "PUDept "),
                         TextSpan(
-                          text: "PUDept",
+                          text: "Control",
                           style: TextStyle(
                             color: Colors.blue,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        TextSpan(text: "Control"),
                       ],
                     ),
                   ),
