@@ -1,7 +1,70 @@
 import 'package:flutter/material.dart';
+import 'add_department.dart';
+import 'add_staff.dart';
+import 'timetable.dart';
+import 'setting.dart';
+import 'add_timetable_form.dart';
+import 'add_department_form.dart';
+import 'add_staff_form.dart';
 
-class DashboardUI extends StatelessWidget {
+class DashboardUI extends StatefulWidget {
   const DashboardUI({super.key});
+
+  @override
+  State<DashboardUI> createState() => _DashboardUIState();
+}
+
+class _DashboardUIState extends State<DashboardUI> {
+  int _currentIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    
+    switch (index) {
+      case 1:
+        // Navigate to Departments page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AddDepartmentPage(),
+          ),
+        );
+        break;
+      case 2:
+        // Navigate to Staff page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AddStaffPage(),
+          ),
+        );
+        break;
+      case 3:
+        // Navigate to Timetable page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const TimetablePage(),
+          ),
+        );
+        break;
+      case 4:
+        // Navigate to Settings page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SettingsPage(),
+          ),
+        );
+        break;
+      case 0:
+      default:
+        // Dashboard - already on this page
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +118,8 @@ class DashboardUI extends StatelessWidget {
       /// ⬇️ Bottom Navigation (Responsive)
        /// ⬇️ Bottom Navigation (UI only)
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
+        currentIndex: _currentIndex,
+        onTap: _onItemTapped,
         selectedItemColor: const Color(0xFF135BEC),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
@@ -63,9 +127,11 @@ class DashboardUI extends StatelessWidget {
           BottomNavigationBarItem(
               icon: Icon(Icons.dashboard), label: "Dashboard"),
           BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today), label: "Calendar"),
+              icon: Icon(Icons.apartment), label: "Departments"),
           BottomNavigationBarItem(
               icon: Icon(Icons.group), label: "Staff"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_month), label: "Timetable"),
           BottomNavigationBarItem(
               icon: Icon(Icons.settings), label: "Settings"),
         ],
@@ -93,40 +159,50 @@ class DashboardUI extends StatelessWidget {
                   children: [
 
                     Expanded(
-                      child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.apartment,
-                            color: const Color.fromARGB(255, 0, 162, 255),
-                            size: 45,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            "Dapartments",
-                            style: TextStyle(
-                                fontSize: 12, color: const Color.fromARGB(255, 0, 0, 0),
-                                fontWeight: FontWeight.bold
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AddDepartmentPage(),
                             ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            "5",
-                            style: const TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.bold
-                            ),
-                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.apartment,
+                                color: const Color.fromARGB(255, 0, 162, 255),
+                                size: 45,
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                "Departments",
+                                style: TextStyle(
+                                    fontSize: 12, color: const Color.fromARGB(255, 0, 0, 0),
+                                    fontWeight: FontWeight.bold
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                "5",
+                                style: const TextStyle(
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.bold
+                                ),
+                              ),
 
-                        ],
-                      ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -204,9 +280,7 @@ class DashboardUI extends StatelessWidget {
                             Icons.calendar_month,
                             color: Colors.white,
                             size: 30,
-                            fontWeight: FontWeight.bold,
                           ),
-
                         ],
                       ),
                     ],
@@ -224,16 +298,53 @@ class DashboardUI extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 /// ⚡ Quick Actions
-                GridView.count(
-                  crossAxisCount: 4,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: const [
-                    _QuickAction(Icons.add_circle, "Add Class"),
-                    _QuickAction(Icons.groups, "Staff"),
-                    _QuickAction(Icons.calendar_month, "Calendar"),
-                    _QuickAction(Icons.description, "Reports"),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      _QuickAction(
+                        Icons.apartment_rounded,
+                        "Add Department",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AddDepartmentFormPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      _QuickAction(
+                        Icons.group_add,
+                        "Add Staff",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AddStaffformPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      _QuickAction(
+                        Icons.calendar_month,
+                        "New Timetable",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AddTimetablePage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      const _QuickAction(Icons.description, "Reports"),
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 24),
@@ -261,8 +372,6 @@ class DashboardUI extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 ..._getRecentActivities(),
-
-
               ],
             ),
           ),
@@ -323,58 +432,73 @@ class DashboardUI extends StatelessWidget {
 class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
-  const _QuickAction(this.icon, this.label);
+  const _QuickAction(this.icon, this.label, {this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         CircleAvatar(
-          radius: 26,
+          radius: 22,
           backgroundColor: Colors.white,
-          child: IconButton(onPressed: (){} , icon: Icon(icon, color: Colors.blue)),
+          child: IconButton(
+            onPressed: onTap ?? () {},
+            icon: Icon(icon, color: Colors.blue, size: 20),
+          ),
         ),
         const SizedBox(height: 6),
-        Text(label, style: const TextStyle(fontSize: 12)),
+        SizedBox(
+          width: 60,
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+          ),
+        ),
       ],
     );
   }
 }
 
-/// 👤 Staff Card
-class _StaffCard extends StatelessWidget {
-  final String name;
-  final String role;
+// /// 👤 Staff Card
+// class _StaffCard extends StatelessWidget {
+//   final String name;
+//   final String role;
 
-  const _StaffCard(this.name, this.role);
+//   const _StaffCard(this.name, this.role);
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 130,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          const CircleAvatar(radius: 24),
-          const SizedBox(height: 8),
-          Text(name,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 13)),
-          Text(role,
-              style: const TextStyle(
-                  fontSize: 11, color: Colors.grey)),
-        ],
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       width: 130,
+//       margin: const EdgeInsets.only(right: 12),
+//       padding: const EdgeInsets.all(12),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(12),
+//       ),
+//       child: Column(
+//         children: [
+//           const CircleAvatar(radius: 24),
+//           const SizedBox(height: 8),
+//           Text(name,
+//               textAlign: TextAlign.center,
+//               style: const TextStyle(
+//                   fontWeight: FontWeight.bold, fontSize: 13)),
+//           Text(role,
+//               style: const TextStyle(
+//                   fontSize: 11, color: Colors.grey)),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 /// 📋 Activity Data Model
 class _ActivityData {
@@ -404,7 +528,7 @@ class _ActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12, left: 0, right: 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
