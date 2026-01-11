@@ -6,6 +6,7 @@ import 'setting.dart';
 import 'add_timetable_form.dart';
 import 'add_department_form.dart';
 import 'add_staff_form.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class DashboardUI extends StatefulWidget {
   const DashboardUI({super.key});
@@ -15,16 +16,17 @@ class DashboardUI extends StatefulWidget {
 }
 
 class _DashboardUIState extends State<DashboardUI> {
+  final _storage = const FlutterSecureStorage(); // storage object
+  String userName = ''; // login user name
   int _currentIndex = 0;
 
   void _onItemTapped(int index) {
     setState(() {
       _currentIndex = index;
     });
-    
+
     switch (index) {
       case 1:
-        // Navigate to Departments page
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -33,7 +35,6 @@ class _DashboardUIState extends State<DashboardUI> {
         );
         break;
       case 2:
-        // Navigate to Staff page
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -42,7 +43,6 @@ class _DashboardUIState extends State<DashboardUI> {
         );
         break;
       case 3:
-        // Navigate to Timetable page
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -51,7 +51,6 @@ class _DashboardUIState extends State<DashboardUI> {
         );
         break;
       case 4:
-        // Navigate to Settings page
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -61,17 +60,27 @@ class _DashboardUIState extends State<DashboardUI> {
         break;
       case 0:
       default:
-        // Dashboard - already on this page
         break;
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName(); // 🔹 load login user name
+  }
+
+  Future<void> _loadUserName() async {
+    final name = await _storage.read(key: 'user_name'); // SupabaseService login မှာ save လုပ်ထားတဲ့ name
+    setState(() {
+      userName = name ?? 'User'; // မရှိရင် 'User' ပြမယ်
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F8),
-
-      /// 🔝 AppBar with Profile Avatar
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -79,16 +88,11 @@ class _DashboardUIState extends State<DashboardUI> {
         title: Row(
           children: [
             const SizedBox(width: 12),
-
-            /// 👤 Profile Avatar
             const CircleAvatar(
               radius: 18,
               child: Icon(Icons.person, color: Colors.white),
             ),
-
             const SizedBox(width: 12),
-
-            /// 📅 Date + Title
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
@@ -114,9 +118,6 @@ class _DashboardUIState extends State<DashboardUI> {
           )
         ],
       ),
-
-      /// ⬇️ Bottom Navigation (Responsive)
-       /// ⬇️ Bottom Navigation (UI only)
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onItemTapped,
@@ -136,8 +137,6 @@ class _DashboardUIState extends State<DashboardUI> {
               icon: Icon(Icons.settings), label: "Settings"),
         ],
       ),
-
-      /// 📱 Responsive Body (Phone Width)
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
@@ -146,10 +145,10 @@ class _DashboardUIState extends State<DashboardUI> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// 👋 Welcome
-                const Text(
-                  "Have A Great Day,\nDr. Smith",
-                  style: TextStyle(
+                /// 👋 Welcome with dynamic user name
+                Text(
+                  "Have A Great Day,\n$userName",
+                  style: const TextStyle(
                       fontSize: 24, fontWeight: FontWeight.bold),
                 ),
 
@@ -157,7 +156,6 @@ class _DashboardUIState extends State<DashboardUI> {
 
                 Row(
                   children: [
-
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
@@ -187,19 +185,17 @@ class _DashboardUIState extends State<DashboardUI> {
                               Text(
                                 "Departments",
                                 style: TextStyle(
-                                    fontSize: 12, color: const Color.fromARGB(255, 0, 0, 0),
-                                    fontWeight: FontWeight.bold
-                                ),
+                                    fontSize: 12,
+                                    color: const Color.fromARGB(255, 0, 0, 0),
+                                    fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 6),
-                              Text(
+                              const Text(
                                 "5",
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 30,
-                                    fontWeight: FontWeight.bold
-                                ),
+                                    fontWeight: FontWeight.bold),
                               ),
-
                             ],
                           ),
                         ),
@@ -212,33 +208,31 @@ class _DashboardUIState extends State<DashboardUI> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.groups_sharp,
-                            color: const Color.fromARGB(255, 0, 162, 255),
-                            size: 45,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            "Staff",
-                            style: TextStyle(
-                                fontSize: 12, color: const Color.fromARGB(255, 0, 0, 0),
-                                fontWeight: FontWeight.bold
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.groups_sharp,
+                              color: const Color.fromARGB(255, 0, 162, 255),
+                              size: 45,
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            "12",
-                            style: const TextStyle(
-                                fontSize: 30, fontWeight: FontWeight.bold
+                            const SizedBox(height: 6),
+                            Text(
+                              "Staff",
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: const Color.fromARGB(255, 0, 0, 0),
+                                  fontWeight: FontWeight.bold),
                             ),
-                          ),
-
-                        ],
+                            const SizedBox(height: 6),
+                            const Text(
+                              "12",
+                              style: TextStyle(
+                                  fontSize: 30, fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -272,8 +266,7 @@ class _DashboardUIState extends State<DashboardUI> {
                             style: TextStyle(
                                 color: Color.fromARGB(179, 255, 255, 255),
                                 fontSize: 25,
-                                fontWeight: FontWeight.bold
-                            ),
+                                fontWeight: FontWeight.bold),
                           ),
                           Expanded(child: SizedBox()),
                           Icon(
@@ -288,16 +281,11 @@ class _DashboardUIState extends State<DashboardUI> {
                 ),
 
                 const SizedBox(height: 24),
-
                 const Text(
                   "Quick Actions",
-                  style:
-                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-
                 const SizedBox(height: 12),
-
-                /// ⚡ Quick Actions
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -310,7 +298,8 @@ class _DashboardUIState extends State<DashboardUI> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const AddDepartmentFormPage(),
+                              builder: (context) =>
+                                  const AddDepartmentFormPage(),
                             ),
                           );
                         },
@@ -348,7 +337,6 @@ class _DashboardUIState extends State<DashboardUI> {
                 ),
 
                 const SizedBox(height: 24),
-
                 Row(
                   children: [
                     const Expanded(
@@ -466,40 +454,6 @@ class _QuickAction extends StatelessWidget {
   }
 }
 
-// /// 👤 Staff Card
-// class _StaffCard extends StatelessWidget {
-//   final String name;
-//   final String role;
-
-//   const _StaffCard(this.name, this.role);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       width: 130,
-//       margin: const EdgeInsets.only(right: 12),
-//       padding: const EdgeInsets.all(12),
-//       decoration: BoxDecoration(
-//         color: Colors.white,
-//         borderRadius: BorderRadius.circular(12),
-//       ),
-//       child: Column(
-//         children: [
-//           const CircleAvatar(radius: 24),
-//           const SizedBox(height: 8),
-//           Text(name,
-//               textAlign: TextAlign.center,
-//               style: const TextStyle(
-//                   fontWeight: FontWeight.bold, fontSize: 13)),
-//           Text(role,
-//               style: const TextStyle(
-//                   fontSize: 11, color: Colors.grey)),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
 /// 📋 Activity Data Model
 class _ActivityData {
   final IconData icon;
@@ -543,7 +497,6 @@ class _ActivityCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          /// Icon Container
           Container(
             width: 48,
             height: 48,
@@ -558,7 +511,6 @@ class _ActivityCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          /// Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -582,7 +534,6 @@ class _ActivityCard extends StatelessWidget {
               ],
             ),
           ),
-          /// Time
           Text(
             activity.time,
             style: TextStyle(

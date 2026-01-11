@@ -72,16 +72,16 @@ class _AddDepartmentPageState extends State<AddDepartmentPage> {
         elevation: 0,
         // toolbarHeight: 70,
         backgroundColor: const Color(0xFFF6F7F8),
-        leading: InkWell(
-          onTap: () => Navigator.pop(context),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.arrow_back_ios, size: 18),
-              Text("Back"),
-            ],
-          ),
-        ),
+        // leading: InkWell(
+        //   onTap: () => Navigator.pop(context),
+        //   child: const Row(
+        //     mainAxisAlignment: MainAxisAlignment.center,
+        //     children: [
+        //       Icon(Icons.arrow_back_ios, size: 18),
+        //       Text("Back"),
+        //     ],
+        //   ),
+        // ),
         centerTitle: true,
         title: Column(
           mainAxisSize: MainAxisSize.min,

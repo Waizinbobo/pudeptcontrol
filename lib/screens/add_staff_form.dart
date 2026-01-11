@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/supabase_service.dart';
 
 class AddStaffformPage extends StatefulWidget {
   const AddStaffformPage({super.key});
@@ -62,7 +63,6 @@ class _AddStaffformPageState extends State<AddStaffformPage> {
         child: Column(
           children: [
 
-            // ===== Profile Picture =====
             const SizedBox(height: 24),
             Stack(
               children: [
@@ -86,14 +86,11 @@ class _AddStaffformPageState extends State<AddStaffformPage> {
               style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w500),
             ),
 
-            // ===== Personal Details =====
             _sectionTitle("Personal Details"),
             _textField("Full Name", nameController, Icons.person),
             _textField("Staff ID", staffIdController, Icons.badge),
-
             _divider(),
 
-            // ===== Professional Info =====
             _sectionTitle("Professional Info"),
             _dropdown("Department", departments, selectedDepartment, (val) {
               setState(() => selectedDepartment = val);
@@ -101,15 +98,12 @@ class _AddStaffformPageState extends State<AddStaffformPage> {
             _dropdown("Role", roles, selectedRole, (val) {
               setState(() => selectedRole = val);
             }),
-
             _divider(),
 
-            // ===== Contact Details =====
             _sectionTitle("Contact Details"),
             _textField("Email Address", emailController, Icons.email, TextInputType.emailAddress),
             _textField("Phone Number", phoneController, Icons.call, TextInputType.phone),
 
-            // ===== Active Status =====
             Padding(
               padding: const EdgeInsets.all(16),
               child: Container(
@@ -142,21 +136,40 @@ class _AddStaffformPageState extends State<AddStaffformPage> {
         ),
       ),
 
-      // ===== Sticky Save Button =====
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16),
         child: ElevatedButton.icon(
           icon: const Icon(Icons.save, color: Colors.white),
           label: const Text("Save Profile",
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
-              ),
+          ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue,
             minimumSize: const Size(double.infinity, 48),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          onPressed: () {
-            // Save staff logic
+          onPressed: () async {
+            try {
+              await SupabaseService.addStaff(
+                name: nameController.text,
+                staffId: staffIdController.text,
+                email: emailController.text,
+                phone: phoneController.text,
+                department: selectedDepartment ?? '',
+                role: selectedRole ?? '',
+                isActive: isActive,
+              );
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Staff added successfully!')),
+              );
+
+              Navigator.pop(context, true); // return true to refresh list
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: $e')),
+              );
+            }
           },
         ),
       ),

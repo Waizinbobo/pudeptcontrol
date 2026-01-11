@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/bottom_navigation.dart';
+import '../services/supabase_service.dart';
+import 'login.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -8,7 +10,7 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> 
+class _SettingsPageState extends State<SettingsPage>
     with TickerProviderStateMixin {
   bool darkMode = false;
   bool notifications = true;
@@ -66,24 +68,24 @@ class _SettingsPageState extends State<SettingsPage>
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
+        // leading: Container(
+        //   margin: const EdgeInsets.all(8),
+        //   decoration: BoxDecoration(
+        //     color: Colors.white,
+        //     borderRadius: BorderRadius.circular(12),
+        //     boxShadow: [
+        //       BoxShadow(
+        //         color: Colors.black.withOpacity(0.05),
+        //         blurRadius: 10,
+        //         offset: const Offset(0, 2),
+        //       ),
+        //     ],
+        //   ),
+        //   child: IconButton(
+        //     icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+        //     onPressed: () => Navigator.pop(context),
+        //   ),
+        // ),
         centerTitle: true,
         title: Text(
           'Settings',
@@ -439,7 +441,19 @@ class _SettingsPageState extends State<SettingsPage>
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: () async {
+                    await SupabaseService.logout();
+
+                    if (!mounted) return;
+
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const DepartmentLoginPage()),
+                      (_) => false,
+                    );
+                  },
+
+
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
