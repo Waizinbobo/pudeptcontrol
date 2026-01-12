@@ -1,38 +1,173 @@
 import 'package:flutter/material.dart';
-import '../services/supabase_service.dart';
+import '../services/staff_service.dart';
+import '../services/department_service.dart';
 
 class AddStaffformPage extends StatefulWidget {
-  const AddStaffformPage({super.key});
+  final Map<String, dynamic>? staff; // For editing existing staff
+  
+  const AddStaffformPage({super.key, this.staff});
 
   @override
   State<AddStaffformPage> createState() => _AddStaffformPageState();
 }
 
 class _AddStaffformPageState extends State<AddStaffformPage> {
-  bool isActive = true;
-  String? selectedDepartment;
-  String? selectedRole;
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _positionController = TextEditingController();
+  final TextEditingController _salaryController = TextEditingController();
+  
+  String? _selectedDepartmentId;
+  DateTime? _selectedHireDate;
+  bool _isLoading = false;
+  bool _isEditing = false;
+  
+  List<Map<String, dynamic>> _departments = [];
 
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController staffIdController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    _isEditing = widget.staff != null;
+    _loadDepartments();
+    
+    if (_isEditing) {
+      // Populate form with existing data
+      _nameController.text = widget.staff!['name'] ?? '';
+      _emailController.text = widget.staff!['email'] ?? '';
+      _phoneController.text = widget.staff!['phone'] ?? '';
+      _positionController.text = widget.staff!['position'] ?? '';
+      _salaryController.text = widget.staff!['salary']?.toString() ?? '';
+      _selectedDepartmentId = widget.staff!['department_id'];
+      
+      if (widget.staff!['hire_date'] != null) {
+        _selectedHireDate = DateTime.parse(widget.staff!['hire_date']);
+      }
+    }
+  }
 
-  final List<String> departments = [
-    "Computer Science",
-    "Engineering",
-    "Business School",
-    "Arts & Humanities",
-    "Medicine",
-  ];
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _positionController.dispose();
+    _salaryController.dispose();
+    super.dispose();
+  }
 
-  final List<String> roles = [
-    "Lecturer",
-    "Senior Lecturer",
-    "Professor",
-    "Administrator",
-    "Researcher",
-  ];
+  Future<void> _loadDepartments() async {
+    try {
+      final departments = await DepartmentService.getAllDepartments();
+      setState(() {
+        _departments = departments;
+      });
+    } catch (e) {
+      print('Error loading departments: $e');
+    }
+  }
+
+  Future<void> _saveStaff() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final salary = _salaryController.text.isNotEmpty 
+          ? double.tryParse(_salaryController.text) 
+          : null;
+
+      if (_isEditing) {
+        // Update existing staff
+        final success = await StaffService.updateStaff(
+          id: widget.staff!['id'],
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          phone: _phoneController.text.trim(),
+          position: _positionController.text.trim(),
+          departmentId: _selectedDepartmentId,
+          hireDate: _selectedHireDate,
+          salary: salary,
+        );
+
+        if (success) {
+          _showSuccessMessage('Staff updated successfully!');
+          Navigator.pop(context, true);
+        } else {
+          _showErrorMessage('Failed to update staff');
+        }
+      } else {
+        // Check if email already exists
+        final emailExists = await StaffService.staffEmailExists(_emailController.text.trim());
+        if (emailExists) {
+          _showErrorMessage('Email already exists');
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        // Create new staff
+        final staff = await StaffService.createStaff(
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          phone: _phoneController.text.trim(),
+          position: _positionController.text.trim(),
+          departmentId: _selectedDepartmentId,
+          hireDate: _selectedHireDate,
+          salary: salary,
+        );
+
+        if (staff != null) {
+          _showSuccessMessage('Staff created successfully!');
+          Navigator.pop(context, true);
+        } else {
+          _showErrorMessage('Failed to create staff');
+        }
+      }
+    } catch (e) {
+      _showErrorMessage('An error occurred: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _showSuccessMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

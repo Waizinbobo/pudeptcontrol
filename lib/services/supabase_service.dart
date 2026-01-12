@@ -62,6 +62,51 @@ class SupabaseService {
     });
   }
 
+  // ================= DEPARTMENT CRUD =================
+
+  static Future<List<Map<String, dynamic>>> getDepartments() async {
+    final res = await _client
+        .from('departments')
+        .select()
+        .eq('is_active', true)
+        .order('id');
+
+    return List<Map<String, dynamic>>.from(res);
+  }
+
+  static Future<void> addDepartment({
+    required String name,
+    required String code,
+    required String description,
+  }) async {
+    await _client.from('departments').insert({
+      'name': name,
+      'code': code,
+      'description': description,
+      'is_active': true,
+    });
+  }
+
+  static Future<void> updateDepartment({
+    required int id,
+    required String name,
+    required String code,
+    required String description,
+  }) async {
+    await _client.from('departments').update({
+      'name': name,
+      'code': code,
+      'description': description,
+    }).eq('id', id);
+  }
+
+  static Future<void> deleteDepartment(int id) async {
+    await _client
+        .from('departments')
+        .update({'is_active': false})
+        .eq('id', id);
+  }
+
   /// ADD STAFF
   static Future<void> addStaff({
     required String name,
