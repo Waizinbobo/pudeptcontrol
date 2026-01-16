@@ -37,7 +37,6 @@ class DepartmentService {
     required String name,
     required String code,
     required String description,
-    required String headName,
   }) async {
     try {
       print('🏢 Creating department: $name');
@@ -46,7 +45,6 @@ class DepartmentService {
         'name': name.trim(),
         'code': code.trim().toUpperCase(),
         'description': description.trim(),
-        'head_name': headName.trim(),
         'staff_count': 0,
         'is_active': true,
         'updated_at': DateTime.now().toIso8601String(),
@@ -113,7 +111,6 @@ class DepartmentService {
     String? name,
     String? code,
     String? description,
-    String? headName,
   }) async {
     try {
       print('📝 Updating department: $id');
@@ -122,7 +119,6 @@ class DepartmentService {
       if (name != null) updateData['name'] = name.trim();
       if (code != null) updateData['code'] = code.trim().toUpperCase();
       if (description != null) updateData['description'] = description.trim();
-      if (headName != null) updateData['head_name'] = headName.trim();
       updateData['updated_at'] = DateTime.now().toIso8601String();
 
       print('📊 Update data: $updateData');

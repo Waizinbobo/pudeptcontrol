@@ -15,7 +15,6 @@ class _AddDepartmentFormPageState extends State<AddDepartmentFormPage> {
   final _nameController = TextEditingController();
   final _codeController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _headNameController = TextEditingController();
   
   bool _isLoading = false;
   bool _isEditing = false;
@@ -30,7 +29,6 @@ class _AddDepartmentFormPageState extends State<AddDepartmentFormPage> {
       _nameController.text = widget.department!['name'] ?? '';
       _codeController.text = widget.department!['code'] ?? '';
       _descriptionController.text = widget.department!['description'] ?? '';
-      _headNameController.text = widget.department!['head_name'] ?? '';
     }
   }
 
@@ -39,7 +37,6 @@ class _AddDepartmentFormPageState extends State<AddDepartmentFormPage> {
     _nameController.dispose();
     _codeController.dispose();
     _descriptionController.dispose();
-    _headNameController.dispose();
     super.dispose();
   }
 
@@ -58,7 +55,6 @@ class _AddDepartmentFormPageState extends State<AddDepartmentFormPage> {
           name: _nameController.text.trim(),
           code: _codeController.text.trim(),
           description: _descriptionController.text.trim(),
-          headName: _headNameController.text.trim(),
         );
 
         if (success) {
@@ -89,7 +85,6 @@ class _AddDepartmentFormPageState extends State<AddDepartmentFormPage> {
           name: _nameController.text.trim(),
           code: _codeController.text.trim(),
           description: _descriptionController.text.trim(),
-          headName: _headNameController.text.trim(),
         );
 
         if (department != null) {
@@ -204,18 +199,6 @@ class _AddDepartmentFormPageState extends State<AddDepartmentFormPage> {
                       }
                       if (value.trim().length < 3) {
                         return 'Code must be at least 3 characters';
-                      }
-                      return null;
-                    },
-                  ),
-
-                  textField(
-                    controller: _headNameController,
-                    label: "Department Head",
-                    hint: "e.g., John Doe",
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter department head name';
                       }
                       return null;
                     },
