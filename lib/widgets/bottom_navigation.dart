@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/dashboard.dart';
 import '../screens/add_department.dart';
-import '../screens/add_staff.dart';
+import '../screens/staff_list.dart';
 import '../screens/timetable.dart';
 import '../screens/setting.dart';
 
@@ -29,7 +29,7 @@ class AppBottomNavigation extends StatelessWidget {
       case 2:
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const AddStaffPage()),
+          MaterialPageRoute(builder: (context) => const StaffListPage()),
           (route) => false,
         );
         break;

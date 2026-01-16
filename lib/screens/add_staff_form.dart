@@ -73,6 +73,12 @@ class _AddStaffformPageState extends State<AddStaffformPage> {
       return;
     }
 
+    // Validate position selection
+    if (_positionController.text.trim().isEmpty) {
+      _showErrorMessage('Please select a position');
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -187,186 +193,333 @@ class _AddStaffformPageState extends State<AddStaffformPage> {
           ),
         ),
         centerTitle: true,
-        title: const Text(
-          "Add Staff Member",
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          _isEditing ? "Edit Staff Member" : "Add Staff Member",
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 640),
+              child: Column(
+                children: [
+                  const SizedBox(height: 32),
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: Column(
-          children: [
+                  /// Basic Info
+                  sectionTitle("Personal Information"),
 
-            const SizedBox(height: 24),
-            Stack(
-              children: [
-                CircleAvatar(
-                  radius: 56,
-                  child: Icon(Icons.person, size: 56),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: CircleAvatar(
-                    backgroundColor: Colors.blue,
-                    child: const Icon(Icons.camera_alt, color: Colors.white),
+                  textField(
+                    controller: _nameController,
+                    label: "Full Name",
+                    hint: "e.g., John Doe",
+                    icon: Icons.person,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter full name';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Upload Photo",
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w500),
-            ),
 
-            _sectionTitle("Personal Details"),
-            _textField("Full Name", nameController, Icons.person),
-            _textField("Staff ID", staffIdController, Icons.badge),
-            _divider(),
+                  textField(
+                    controller: _emailController,
+                    label: "Email Address",
+                    hint: "e.g., john@example.com",
+                    icon: Icons.email,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter email address';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                        return 'Please enter a valid email address';
+                      }
+                      return null;
+                    },
+                  ),
 
-            _sectionTitle("Professional Info"),
-            _dropdown("Department", departments, selectedDepartment, (val) {
-              setState(() => selectedDepartment = val);
-            }),
-            _dropdown("Role", roles, selectedRole, (val) {
-              setState(() => selectedRole = val);
-            }),
-            _divider(),
+                  textField(
+                    controller: _phoneController,
+                    label: "Phone Number",
+                    hint: "e.g., +1234567890",
+                    icon: Icons.phone,
+                    validator: (value) {
+                      if (value != null && value.trim().isNotEmpty) {
+                        if (!RegExp(r'^[\d\s\-\+\(\)]+$').hasMatch(value.trim())) {
+                          return 'Please enter a valid phone number';
+                        }
+                      }
+                      return null;
+                    },
+                  ),
 
-            _sectionTitle("Contact Details"),
-            _textField("Email Address", emailController, Icons.email, TextInputType.emailAddress),
-            _textField("Phone Number", phoneController, Icons.call, TextInputType.phone),
+                  const SizedBox(height: 16),
 
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Column(
+                  /// Professional Info
+                  sectionTitle("Professional Information"),
+
+                  // Position Dropdown
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Active Status", style: TextStyle(fontWeight: FontWeight.bold)),
-                        SizedBox(height: 4),
-                        Text("Allow user to access the system", style: TextStyle(fontSize: 12)),
+                        const Text('Position/Role', style: TextStyle(fontWeight: FontWeight.w500)),
+                        const SizedBox(height: 6),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              hint: const Text('Select Position'),
+                              value: _positionController.text.isNotEmpty ? _positionController.text : null,
+                              isExpanded: true,
+                              items: const [
+                                DropdownMenuItem<String>(
+                                  value: 'Professor',
+                                  child: Text('Professor'),
+                                ),
+                                DropdownMenuItem<String>(
+                                  value: 'Associate Professor',
+                                  child: Text('Associate Professor'),
+                                ),
+                                DropdownMenuItem<String>(
+                                  value: 'Lecturer',
+                                  child: Text('Lecturer'),
+                                ),
+                                DropdownMenuItem<String>(
+                                  value: 'Assistant Lecturer',
+                                  child: Text('Assistant Lecturer'),
+                                ),
+                                DropdownMenuItem<String>(
+                                  value: 'Tutor',
+                                  child: Text('Tutor'),
+                                ),
+                                DropdownMenuItem<String>(
+                                  value: 'Researcher',
+                                  child: Text('Researcher'),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _positionController.text = value ?? '';
+                                });
+                              },
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                    Switch(
-                      value: isActive,
-                      onChanged: (val) => setState(() => isActive = val),
-                      activeColor: Colors.blue,
+                  ),
+
+                  // Department Dropdown
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Department', style: TextStyle(fontWeight: FontWeight.w500)),
+                        const SizedBox(height: 6),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              hint: const Text('Select Department'),
+                              value: _selectedDepartmentId,
+                              isExpanded: true,
+                              items: _departments.map((dept) {
+                                return DropdownMenuItem<String>(
+                                  value: dept['id'],
+                                  child: Text(dept['name'] ?? 'Unknown'),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedDepartmentId = value;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+
+                  // Hire Date Picker
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Hire Date', style: TextStyle(fontWeight: FontWeight.w500)),
+                        const SizedBox(height: 6),
+                        InkWell(
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _selectedHireDate ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                            );
+                            if (date != null) {
+                              setState(() {
+                                _selectedHireDate = date;
+                              });
+                            }
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today, color: Colors.grey),
+                                const SizedBox(width: 12),
+                                Text(
+                                  _selectedHireDate != null
+                                      ? '${_selectedHireDate!.day}/${_selectedHireDate!.month}/${_selectedHireDate!.year}'
+                                      : 'Select Hire Date',
+                                  style: TextStyle(
+                                    color: _selectedHireDate != null ? Colors.black : Colors.grey,
+                                  ),
+                                ),
+                                const Spacer(),
+                                const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  textField(
+                    controller: _salaryController,
+                    label: "Salary (Optional)",
+                    hint: "e.g., 50000.00",
+                    icon: Icons.attach_money,
+                    validator: (value) {
+                      if (value != null && value.trim().isNotEmpty) {
+                        final salary = double.tryParse(value.trim());
+                        if (salary == null || salary < 0) {
+                          return 'Please enter a valid salary amount';
+                        }
+                      }
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  /// Save Button
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton.icon(
+                        onPressed: _isLoading ? null : _saveStaff,
+                        icon: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.check, size: 24, color: Colors.white),
+                        label: Text(
+                          _isLoading ? 'Saving...' : (_isEditing ? "Update Staff" : "Add Staff"),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF136DEC),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ElevatedButton.icon(
-          icon: const Icon(Icons.save, color: Colors.white),
-          label: const Text("Save Profile",
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
           ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            minimumSize: const Size(double.infinity, 48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          onPressed: () async {
-            try {
-              await SupabaseService.addStaff(
-                name: nameController.text,
-                staffId: staffIdController.text,
-                email: emailController.text,
-                phone: phoneController.text,
-                department: selectedDepartment ?? '',
-                role: selectedRole ?? '',
-                isActive: isActive,
-              );
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Staff added successfully!')),
-              );
-
-              Navigator.pop(context, true); // return true to refresh list
-            } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: $e')),
-              );
-            }
-          },
         ),
       ),
     );
   }
 
-  Widget _sectionTitle(String title) {
+  /// Section Title
+  Widget sectionTitle(String text) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          title.toUpperCase(),
+          text,
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.grey,
           ),
         ),
       ),
     );
   }
 
-  Widget _textField(String label, TextEditingController controller, IconData icon,
-      [TextInputType type = TextInputType.text]) {
+  /// TextField
+  Widget textField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    String? Function(String?)? validator,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: TextField(
-        controller: controller,
-        keyboardType: type,
-        decoration: InputDecoration(
-          labelText: label,
-          suffixIcon: Icon(icon),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          const SizedBox(height: 6),
+          TextFormField(
+            controller: controller,
+            validator: validator,
+            decoration: InputDecoration(
+              hintText: hint,
+              prefixIcon: Icon(icon, size: 20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF136DEC)),
+              ),
+            ),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _dropdown(String label, List<String> items, String? value, ValueChanged<String?> onChanged) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: DropdownButtonFormField<String>(
-        value: value,
-        decoration: InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: onChanged,
-      ),
-    );
-  }
-
-  Widget _divider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Divider(),
     );
   }
 }

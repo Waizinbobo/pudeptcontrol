@@ -3,6 +3,35 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class DepartmentService {
   static final SupabaseClient _supabase = Supabase.instance.client;
 
+  // Update Department Staff Count
+  static Future<void> updateDepartmentStaffCount(String departmentId) async {
+    try {
+      print('🔢 Updating staff count for department: $departmentId');
+      
+      // Count active staff in the department
+      final response = await _supabase
+          .from('staff')
+          .select('id')
+          .eq('department_id', departmentId)
+          .eq('is_active', true);
+
+      final staffCount = response.length;
+
+      // Update department with new staff count
+      await _supabase
+          .from('departments')
+          .update({
+            'staff_count': staffCount,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', departmentId);
+
+      print('✅ Department staff count updated: $staffCount');
+    } catch (e) {
+      print('❌ Error updating department staff count: $e');
+    }
+  }
+
   // Create Department
   static Future<Map<String, dynamic>?> createDepartment({
     required String name,

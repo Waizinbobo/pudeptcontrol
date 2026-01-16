@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'add_department.dart';
-import 'add_staff.dart';
+import 'staff_list.dart';
 import 'timetable.dart';
 import 'setting.dart';
 import 'add_timetable_form.dart';
@@ -38,7 +38,7 @@ class _DashboardUIState extends State<DashboardUI> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const AddStaffPage(),
+            builder: (context) => const StaffListPage(),
           ),
         );
         break;

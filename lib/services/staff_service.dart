@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'department_service.dart';
 
 class StaffService {
   static final SupabaseClient _supabase = Supabase.instance.client;
@@ -16,17 +17,19 @@ class StaffService {
     try {
       print('👥 Creating staff member: $name');
       
-      final staffData = {
+      final staffData = <String, dynamic>{
         'name': name.trim(),
         'email': email.trim().toLowerCase(),
         'position': position?.trim(),
         'department_id': departmentId,
         'phone': phone?.trim(),
-        'hire_date': hireDate?.toIso8601String(),
         'salary': salary,
         'is_active': true,
-        'updated_at': DateTime.now().toIso8601String(),
       };
+
+      if (hireDate != null) {
+        staffData['hire_date'] = hireDate.toIso8601String().split('T')[0];
+      }
 
       print('📝 Staff data to insert: $staffData');
 
@@ -37,6 +40,12 @@ class StaffService {
           .single();
 
       print('✅ Staff created successfully: $response');
+
+      // Update department staff count if department is assigned
+      if (departmentId != null && departmentId.isNotEmpty) {
+        await DepartmentService.updateDepartmentStaffCount(departmentId);
+      }
+
       return response;
     } catch (e) {
       print('❌ Error creating staff: $e');
@@ -55,8 +64,7 @@ class StaffService {
             *,
             departments (
               id,
-              name,
-              code
+              name
             )
           ''')
           .eq('is_active', true)
@@ -81,8 +89,7 @@ class StaffService {
             *,
             departments (
               id,
-              name,
-              code
+              name
             )
           ''')
           .eq('id', id)
@@ -111,15 +118,18 @@ class StaffService {
     try {
       print('📝 Updating staff: $id');
       
+      // Get current staff data to check old department
+      final currentStaff = await getStaffById(id);
+      final oldDepartmentId = currentStaff?['department_id'] as String?;
+      
       final updateData = <String, dynamic>{};
       if (name != null) updateData['name'] = name.trim();
       if (email != null) updateData['email'] = email.trim().toLowerCase();
       if (position != null) updateData['position'] = position.trim();
       if (departmentId != null) updateData['department_id'] = departmentId;
       if (phone != null) updateData['phone'] = phone.trim();
-      if (hireDate != null) updateData['hire_date'] = hireDate.toIso8601String();
+      if (hireDate != null) updateData['hire_date'] = hireDate.toIso8601String().split('T')[0];
       if (salary != null) updateData['salary'] = salary;
-      updateData['updated_at'] = DateTime.now().toIso8601String();
 
       print('📊 Update data: $updateData');
 
@@ -129,6 +139,17 @@ class StaffService {
           .eq('id', id);
 
       print('✅ Staff updated successfully');
+
+      // Update department staff counts if department changed
+      if (departmentId != oldDepartmentId) {
+        if (oldDepartmentId != null && oldDepartmentId.isNotEmpty) {
+          await DepartmentService.updateDepartmentStaffCount(oldDepartmentId);
+        }
+        if (departmentId != null && departmentId.isNotEmpty) {
+          await DepartmentService.updateDepartmentStaffCount(departmentId);
+        }
+      }
+
       return true;
     } catch (e) {
       print('❌ Error updating staff: $e');
@@ -141,15 +162,24 @@ class StaffService {
     try {
       print('🗑️ Deleting staff: $id');
       
+      // Get staff data before deletion to update department count
+      final staff = await getStaffById(id);
+      final departmentId = staff?['department_id'] as String?;
+      
       await _supabase
           .from('staff')
           .update({
             'is_active': false,
-            'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('id', id);
 
       print('✅ Staff deleted successfully');
+
+      // Update department staff count if staff had a department
+      if (departmentId != null && departmentId.isNotEmpty) {
+        await DepartmentService.updateDepartmentStaffCount(departmentId);
+      }
+
       return true;
     } catch (e) {
       print('❌ Error deleting staff: $e');
@@ -168,8 +198,7 @@ class StaffService {
             *,
             departments (
               id,
-              name,
-              code
+              name
             )
           ''')
           .eq('is_active', true)
@@ -195,8 +224,7 @@ class StaffService {
             *,
             departments (
               id,
-              name,
-              code
+              name
             )
           ''')
           .eq('department_id', departmentId)
