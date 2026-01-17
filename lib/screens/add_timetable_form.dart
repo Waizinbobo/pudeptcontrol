@@ -152,49 +152,26 @@ class _AddTimetablePageState extends State<AddTimetablePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF101822) : const Color(0xFFF6F7F8),
+      backgroundColor: const Color(0xFFF6F7F8),
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        backgroundColor: isDark ? const Color(0xFF101822) : const Color(0xFFF6F7F8),
-        leading: InkWell(
-          onTap: () => Navigator.pop(context),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.arrow_back_ios, size: 18),
-              Text("Back"),
-            ],
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
         title: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                _isEditing ? 'Edit Timetable' : 'Add Timetable',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                  letterSpacing: -0.5,
-                ),
-              ),
+            Text(
+              _isEditing ? 'Edit Timetable' : 'Add Timetable',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                'Schedule your classes',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+            const SizedBox(height: 4),
+            Text(
+              'Schedule your classes',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -202,146 +179,100 @@ class _AddTimetablePageState extends State<AddTimetablePage> {
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 640),
-              child: Column(
-                children: [
-                  const SizedBox(height: 32),
-
-                  /// Basic Information
-                  _sectionTitle("Basic Information"),
-                  
-                  _field(
-                    controller: _subjectController,
-                    label: "Subject",
-                    hint: "e.g., CS-301 - Data Structures",
-                    icon: Icons.book,
-                  ),
-                  
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
+          child: Column(
+            children: [
+              _sectionCard(
+                "Basic Information",
+                Icons.info_outline,
+                [
+                  _field(_subjectController, "Subject", Icons.book),
                   _dropdown(
-                    label: "Staff",
-                    value: _selectedStaffId,
-                    items: _staff.map((e) => e['id']).toList(),
-                    onChanged: (v) => setState(() => _selectedStaffId = v),
+                    "Staff",
+                    _selectedStaffId,
+                    _staff.map((e) => e['id']).toList(),
+                    (v) => setState(() => _selectedStaffId = v),
                     labels: _staff.map((e) => '${e['name']} - ${e['position']}').toList(),
-                    icon: Icons.person,
+                    isExpanded: true,
                   ),
-                  
-                  _field(
-                    controller: _roomController,
-                    label: "Room",
-                    hint: "e.g., Hall A, Lab 3",
-                    icon: Icons.meeting_room,
-                  ),
-                  
+                  _field(_roomController, "Room", Icons.meeting_room),
                   _dropdown(
-                    label: "Semester",
-                    value: _selectedSemester,
-                    items: _semesters,
-                    onChanged: (v) => setState(() => _selectedSemester = v),
-                    icon: Icons.school,
+                    "Semester",
+                    _selectedSemester,
+                    _semesters,
+                    (v) => setState(() => _selectedSemester = v),
+                    isExpanded: true,
                   ),
-
-                  const SizedBox(height: 16),
-
-                  /// Schedule Information
-                  _sectionTitle("Schedule Information"),
-                  
-                  _dropdown(
-                    label: "Day",
-                    value: _selectedDay,
-                    items: _days,
-                    onChanged: (v) => setState(() => _selectedDay = v),
-                    icon: Icons.calendar_today,
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _timeBox(
-                          "Start Time",
-                          _startTime,
-                          () => _pickTime(true),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _timeBox(
-                          "End Time",
-                          _endTime,
-                          () => _pickTime(false),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  /// Additional Information
-                  _sectionTitle("Additional Information"),
-                  
-                  _dropdown(
-                    label: "Department",
-                    value: _selectedDepartmentId,
-                    items: _departments.map((e) => e['id']).toList(),
-                    onChanged: (v) => setState(() => _selectedDepartmentId = v),
-                    labels: _departments.map((e) => e['name']).toList(),
-                    icon: Icons.apartment,
-                  ),
-                  
-                  _textArea(
-                    controller: _descriptionController,
-                    label: "Description",
-                    hint: "Enter additional notes or description...",
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  /// Save Button
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _saveTimetable,
-                        icon: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : const Icon(Icons.check, size: 24, color: Colors.white),
-                        label: Text(
-                          _isLoading
-                              ? 'Saving...'
-                              : (_isEditing ? 'Update Timetable' : 'Save Changes'),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF136DEC),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
                 ],
               ),
-            ),
+              _sectionCard(
+                "Schedule Information",
+                Icons.schedule,
+                [
+                  _dropdown(
+                    "Day",
+                    _selectedDay,
+                    _days,
+                    (v) => setState(() => _selectedDay = v),
+                    isExpanded: true,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _timeBox("Start Time", _startTime,
+                          () => _pickTime(true)),
+                      const SizedBox(width: 12),
+                      _timeBox(
+                          "End Time", _endTime, () => _pickTime(false)),
+                    ],
+                  ),
+                ],
+              ),
+              _sectionCard(
+                "Additional Information",
+                Icons.layers_outlined,
+                [
+                  _dropdown(
+                    "Department",
+                    _selectedDepartmentId,
+                    _departments.map((e) => e['id']).toList(),
+                    (v) => setState(() => _selectedDepartmentId = v),
+                    labels:
+                        _departments.map((e) => e['name']).toList(),
+                    isExpanded: true,
+                  ),
+                  _field(
+                    _descriptionController,
+                    "Description",
+                    Icons.description,
+                    maxLines: 3,
+                    required: false,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _saveTimetable,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF136DEC),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          _isEditing
+                              ? 'Update Timetable'
+                              : 'Create Timetable',
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -350,210 +281,125 @@ class _AddTimetablePageState extends State<AddTimetablePage> {
 
   /// ================= UI HELPERS =================
 
-  Widget _sectionTitle(String text) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
+  Widget _sectionCard(String title, IconData icon, List<Widget> children) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: const Color(0xFF136DEC)),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...children,
+          ],
         ),
       ),
     );
   }
 
-  Widget _field({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
+  Widget _field(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
     int maxLines = 1,
     bool required = true,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        validator: required
+            ? (v) => v == null || v.isEmpty ? 'Required' : null
+            : null,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
           ),
-          const SizedBox(height: 6),
-          TextFormField(
-            controller: controller,
-            maxLines: maxLines,
-            validator: required
-                ? (v) => v == null || v.trim().isEmpty ? 'Required' : null
-                : null,
-            decoration: InputDecoration(
-              hintText: hint,
-              prefixIcon: Icon(icon, size: 20),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFCFD9E7)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF136DEC), width: 2),
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _textArea({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 6),
-          TextFormField(
-            controller: controller,
-            maxLines: 5,
-            decoration: InputDecoration(
-              hintText: hint,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFCFD9E7)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF136DEC), width: 2),
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.all(16),
-            ),
-          ),
-          const Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: EdgeInsets.only(top: 4),
-              child: Text(
-                "0/250",
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _dropdown({
-    required String label,
-    required dynamic value,
-    required List items,
-    required Function(dynamic) onChanged,
-    required IconData icon,
-    List? labels,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 6),
-          DropdownButtonFormField(
-            value: value,
-            decoration: InputDecoration(
-              prefixIcon: Icon(icon, size: 20),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFCFD9E7)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF136DEC), width: 2),
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            ),
-            items: List.generate(items.length, (i) {
-              return DropdownMenuItem(
-                value: items[i],
-                child: Text(labels != null ? labels[i] : items[i].toString()),
-              );
-            }),
-            onChanged: onChanged,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _timeBox(String title, TimeOfDay time, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFCFD9E7)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  Widget _dropdown(
+    String label,
+    dynamic value,
+    List items,
+    Function(dynamic) onChanged, {
+    List? labels,
+    bool isExpanded = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: DropdownButtonFormField(
+        value: value,
+        isExpanded: isExpanded,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+        ),
+        items: List.generate(items.length, (i) {
+          return DropdownMenuItem(
+            value: items[i],
+            child: Text(
+              labels != null ? labels[i] : items[i].toString(),
+              style: const TextStyle(fontSize: 14),
+              overflow: TextOverflow.ellipsis,
+            ),
+          );
+        }),
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _timeBox(
+      String title, TimeOfDay time, VoidCallback onTap) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(color: Colors.grey)),
+              const SizedBox(height: 6),
+              Text(
+                time.format(context),
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.bold),
               ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.access_time, size: 18, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text(
-                  time.format(context),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
