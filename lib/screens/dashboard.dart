@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'add_department.dart';
 import 'staff_list.dart';
 import 'timetable.dart';
@@ -7,6 +8,8 @@ import 'add_timetable_form.dart';
 import 'add_department_form.dart';
 import 'add_staff_form.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../services/department_service.dart';
+import '../services/staff_service.dart';
 
 class DashboardUI extends StatefulWidget {
   const DashboardUI({super.key});
@@ -16,9 +19,19 @@ class DashboardUI extends StatefulWidget {
 }
 
 class _DashboardUIState extends State<DashboardUI> {
-  final _storage = const FlutterSecureStorage(); // storage object
-  String userName = ''; // login user name
+  final _storage = const FlutterSecureStorage();
+  final _supabase = Supabase.instance.client;
+  String userName = '';
   int _currentIndex = 0;
+  
+  // Real-time data
+  int _departmentCount = 0;
+  int _staffCount = 0;
+  List<_ActivityData> _recentActivities = [];
+  
+  RealtimeChannel? _departmentsChannel;
+  RealtimeChannel? _staffChannel;
+  RealtimeChannel? _timetableChannel;
 
   void _onItemTapped(int index) {
     setState(() {
@@ -67,13 +80,170 @@ class _DashboardUIState extends State<DashboardUI> {
   @override
   void initState() {
     super.initState();
-    _loadUserName(); // 🔹 load login user name
+    _loadUserName();
+    _loadStats();
+    _setupRealtimeListeners();
+    _loadRecentActivities();
+  }
+
+  @override
+  void dispose() {
+    _departmentsChannel?.unsubscribe();
+    _staffChannel?.unsubscribe();
+    _timetableChannel?.unsubscribe();
+    super.dispose();
   }
 
   Future<void> _loadUserName() async {
-    final name = await _storage.read(key: 'user_name'); // SupabaseService login မှာ save လုပ်ထားတဲ့ name
+    final name = await _storage.read(key: 'user_name');
     setState(() {
-      userName = name ?? 'User'; // မရှိရင် 'User' ပြမယ်
+      userName = name ?? 'User';
+    });
+  }
+
+  Future<void> _loadStats() async {
+    final deptStats = await DepartmentService.getDepartmentStats();
+    final staffStats = await StaffService.getStaffStats();
+    
+    setState(() {
+      _departmentCount = deptStats['total_departments'] ?? 0;
+      _staffCount = staffStats['total_staff'] ?? 0;
+    });
+  }
+
+  void _setupRealtimeListeners() {
+    // Listen to departments changes
+    _departmentsChannel = _supabase
+        .channel('departments_changes')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'departments',
+          callback: (payload) {
+            _loadStats();
+          },
+        )
+        .subscribe();
+
+    // Listen to staff changes
+    _staffChannel = _supabase
+        .channel('staff_changes')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'staff',
+          callback: (payload) {
+            _loadStats();
+            _addActivityFromChange(payload);
+          },
+        )
+        .subscribe();
+
+    // Listen to timetable changes
+    _timetableChannel = _supabase
+        .channel('timetable_changes')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'timetables',
+          callback: (payload) {
+            _addActivityFromChange(payload);
+          },
+        )
+        .subscribe();
+  }
+
+  void _addActivityFromChange(PostgresChangePayload payload) {
+    String title = '';
+    String description = '';
+    IconData icon = Icons.update;
+    Color color = Colors.blue;
+
+    if (payload.table == 'staff') {
+      if (payload.eventType == PostgresChangeEvent.insert) {
+        title = 'Staff Member Added';
+        final newRecord = payload.newRecord;
+        description = newRecord['name'] ?? 'New staff member';
+        icon = Icons.person_add;
+        color = Colors.green;
+      } else if (payload.eventType == PostgresChangeEvent.update) {
+        title = 'Staff Member Updated';
+        final newRecord = payload.newRecord;
+        description = newRecord['name'] ?? 'Staff updated';
+        icon = Icons.edit;
+        color = Colors.orange;
+      } else if (payload.eventType == PostgresChangeEvent.delete) {
+        title = 'Staff Member Removed';
+        final oldRecord = payload.oldRecord;
+        description = oldRecord['name'] ?? 'Staff removed';
+        icon = Icons.delete_outline;
+        color = Colors.red;
+      }
+    } else if (payload.table == 'departments') {
+      if (payload.eventType == PostgresChangeEvent.insert) {
+        title = 'Department Added';
+        final newRecord = payload.newRecord;
+        description = newRecord['name'] ?? 'New department';
+        icon = Icons.add_circle_outline;
+        color = Colors.green;
+      } else if (payload.eventType == PostgresChangeEvent.update) {
+        title = 'Department Updated';
+        final newRecord = payload.newRecord;
+        description = newRecord['name'] ?? 'Department updated';
+        icon = Icons.edit;
+        color = Colors.orange;
+      }
+    } else if (payload.table == 'timetables') {
+      if (payload.eventType == PostgresChangeEvent.insert) {
+        title = 'New Class Added';
+        final newRecord = payload.newRecord;
+        description = newRecord['subject'] ?? 'New timetable entry';
+        icon = Icons.add_circle_outline;
+        color = Colors.green;
+      } else if (payload.eventType == PostgresChangeEvent.update) {
+        title = 'Timetable Updated';
+        final newRecord = payload.newRecord;
+        description = newRecord['subject'] ?? 'Schedule changed';
+        icon = Icons.edit_calendar;
+        color = Colors.orange;
+      }
+    }
+
+    if (title.isNotEmpty) {
+      setState(() {
+        _recentActivities.insert(0, _ActivityData(
+          icon: icon,
+          title: title,
+          description: description,
+          time: 'Just now',
+          color: color,
+          iconBg: color.withOpacity(0.1),
+        ));
+        
+        // Keep only last 5 activities
+        if (_recentActivities.length > 5) {
+          _recentActivities = _recentActivities.take(5).toList();
+        }
+      });
+    }
+  }
+
+  Future<void> _loadRecentActivities() async {
+    // Load initial activities from recent changes
+    // For now, use sample data or load from a log table if available
+    final activities = [
+      _ActivityData(
+        icon: Icons.notifications_active,
+        title: "System Ready",
+        description: "All systems operational",
+        time: "Just now",
+        color: Colors.purple,
+        iconBg: Colors.purple.withOpacity(0.1),
+      ),
+    ];
+    
+    setState(() {
+      _recentActivities = activities;
     });
   }
 
@@ -190,9 +360,9 @@ class _DashboardUIState extends State<DashboardUI> {
                                     fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 6),
-                              const Text(
-                                "5",
-                                style: TextStyle(
+                              Text(
+                                "$_departmentCount",
+                                style: const TextStyle(
                                     fontSize: 30,
                                     fontWeight: FontWeight.bold),
                               ),
@@ -227,9 +397,9 @@ class _DashboardUIState extends State<DashboardUI> {
                                   fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 6),
-                            const Text(
-                              "12",
-                              style: TextStyle(
+                            Text(
+                              "$_staffCount",
+                              style: const TextStyle(
                                   fontSize: 30, fontWeight: FontWeight.bold),
                             ),
                           ],
@@ -359,7 +529,25 @@ class _DashboardUIState extends State<DashboardUI> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                ..._getRecentActivities(),
+                if (_recentActivities.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'No recent activities',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  ..._recentActivities.map((activity) => _ActivityCard(activity)),
               ],
             ),
           ),
@@ -368,52 +556,6 @@ class _DashboardUIState extends State<DashboardUI> {
     );
   }
 
-  static List<Widget> _getRecentActivities() {
-    final activities = [
-      _ActivityData(
-        icon: Icons.add_circle_outline,
-        title: "New Class Added",
-        description: "CS-301 - Data Structures",
-        time: "2 hours ago",
-        color: Colors.green,
-        iconBg: Colors.green.withOpacity(0.1),
-      ),
-      _ActivityData(
-        icon: Icons.person_add,
-        title: "Staff Member Added",
-        description: "Dr. Sarah Johnson joined",
-        time: "5 hours ago",
-        color: Colors.blue,
-        iconBg: Colors.blue.withOpacity(0.1),
-      ),
-      _ActivityData(
-        icon: Icons.edit_calendar,
-        title: "Timetable Updated",
-        description: "Room 204 schedule changed",
-        time: "1 day ago",
-        color: Colors.orange,
-        iconBg: Colors.orange.withOpacity(0.1),
-      ),
-      _ActivityData(
-        icon: Icons.delete_outline,
-        title: "Class Cancelled",
-        description: "CS-205 cancelled for today",
-        time: "2 days ago",
-        color: Colors.red,
-        iconBg: Colors.red.withOpacity(0.1),
-      ),
-      _ActivityData(
-        icon: Icons.notifications_active,
-        title: "Reminder Set",
-        description: "Meeting reminder for tomorrow",
-        time: "3 days ago",
-        color: Colors.purple,
-        iconBg: Colors.purple.withOpacity(0.1),
-      ),
-    ];
-
-    return activities.map((activity) => _ActivityCard(activity)).toList();
-  }
 }
 
 /// 🔘 Quick Action Item
